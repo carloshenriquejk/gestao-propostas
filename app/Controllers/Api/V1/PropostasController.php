@@ -21,6 +21,29 @@ class PropostasController extends ResourceController
         $this->statusService = new PropostaStatusService();
     }
 
+
+    public function index()
+{
+    $page = (int) ($this->request->getGet('page') ?? 1);
+    $perPage = (int) ($this->request->getGet('per_page') ?? 10);
+
+    // Limite máximo para evitar abuso
+    $perPage = min($perPage, 100);
+
+    $model = new \App\Models\PropostaModel();
+
+    $data = $model->paginate($perPage, 'default', $page);
+
+    return $this->respond([
+        'data' => $data,
+        'meta' => [
+            'currentPage' => $model->pager->getCurrentPage(),
+            'perPage'     => $perPage,
+            'total'       => $model->pager->getTotal(),
+            'totalPages'  => $model->pager->getPageCount(),
+        ]
+    ]);
+}
     /**
      * POST /propostas
      * Cria proposta (idempotente)
@@ -87,6 +110,22 @@ public function create()
             return $this->failServerError($e->getMessage());
         }
     }
+
+    public function auditoria($id)
+{
+    $auditoriaModel = new \App\Models\PropostaAuditoriaModel();
+
+    $logs = $auditoriaModel
+        ->where('proposta_id', $id)
+        ->orderBy('created_at', 'ASC')
+        ->findAll();
+
+    if (!$logs) {
+        return $this->failNotFound('Nenhum histórico encontrado.');
+    }
+
+    return $this->respond($logs);
+}
 
     /**
      * POST /propostas/{id}/submit
