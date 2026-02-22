@@ -13,3 +13,15 @@ $routes->post('propostas/(:num)/submit', 'Api\V1\PropostasController::submit/$1'
 $routes->post('propostas/(:num)/approve', 'Api/V1/PropostasController::approve/$1');
 $routes->post('propostas/(:num)/reject', 'Api/V1/PropostasController::reject/$1');
 $routes->post('propostas/(:num)/cancel', 'Api/V1/PropostasController::cancel/$1');
+
+
+$routes->group('api/v1', function($routes) {
+
+    $routes->resource('clientes', [
+        'controller' => 'Api\V1\ClientesController'
+    ]);
+
+    $routes->resource('propostas', [
+        'controller' => 'Api\V1\PropostasController'
+    ]);
+});

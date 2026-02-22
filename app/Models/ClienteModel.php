@@ -25,7 +25,7 @@ class ClienteModel extends Model
 
     protected $validationRules = [
         'nome' => 'required|min_length[3]',
-        'email' => 'required|valid_email|is_unique[clientes.email,id,{id}]',
-        'documento' => 'required|min_length[11]|max_length[20]',
+        'email' => 'permit_empty|valid_email',
+        'documento' => 'permit_empty|min_length[11]'
     ];
 }
