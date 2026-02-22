@@ -54,6 +54,11 @@ database.default.database = gestao_proposta
 database.default.username = root
 database.default.password = 
 database.default.DBDriver = MySQLi
+
+CI_ENVIRONMENT=testing
+database.default.DBDriver = SQLite3
+database.default.database = ./tests/database_test.db
+
 🗄️ Criar banco de dados e migrations
 
 Crie o banco de dados MySQL:
@@ -134,8 +139,23 @@ curl -X POST http://localhost:8080/api/v1/propostas/1/approve \
 -H "X-Actor: user:1"
 Buscar propostas paginadas com filtros
 curl -X GET "http://localhost:8080/api/v1/propostas?status=SUBMITTED&sort=created_at&order=desc&page=1&per_page=10"
-📖 Documentação Swagger
 
-A documentação completa da API está disponível em:
 
-http://localhost/gestao-propostas/public/index.php/docs
+📖 Testes
+Rodar migrations para o banco de testes:
+
+php spark migrate -e testing
+Rodando os testes com PHPUnit
+
+Você pode rodar os testes diretamente usando o PHPUnit:
+
+php vendor/bin/phpunit
+
+Para rodar apenas uma suíte específica, por exemplo ClientesControllerTest:
+
+php vendor/bin/phpunit tests/Api/V1/ClientesControllerTest.php
+
+Para rodar todos os testes com relatório mais detalhado:
+
+php vendor/bin/phpunit --testdox
+
