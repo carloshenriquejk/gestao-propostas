@@ -1,0 +1,126 @@
+openapi: 3.0.3
+info:
+  title: API Gestão de Propostas
+  description: API REST para controle de propostas com fluxo de status, auditoria e versionamento.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost/gestao-propostas/public
+
+paths:
+
+  /api/v1/clientes:
+    post:
+      summary: Criar cliente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nome, email, documento]
+              properties:
+                nome:
+                  type: string
+                email:
+                  type: string
+                documento:
+                  type: string
+      responses:
+        201:
+          description: Cliente criado
+
+  /api/v1/propostas:
+    get:
+      summary: Listar propostas com paginação e filtros
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+        - in: query
+          name: status
+          schema:
+            type: string
+        - in: query
+          name: date_from
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: date_to
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: sort
+          schema:
+            type: string
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [asc, desc]
+      responses:
+        200:
+          description: Lista paginada de propostas
+
+    post:
+      summary: Criar proposta
+      parameters:
+        - in: header
+          name: X-Actor
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: Idempotency-Key
+          required: false
+          schema:
+            type: string
+      responses:
+        201:
+          description: Proposta criada
+
+  /api/v1/propostas/{id}/submit:
+    post:
+      summary: Submeter proposta
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Status alterado para SUBMITTED
+
+  /api/v1/propostas/{id}/approve:
+    post:
+      summary: Aprovar proposta
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Status alterado para APPROVED
+
+  /api/v1/propostas/{id}/auditoria:
+    get:
+      summary: Histórico de auditoria da proposta
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Lista de eventos

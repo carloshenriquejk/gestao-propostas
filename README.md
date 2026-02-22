@@ -1,69 +1,141 @@
-# CodeIgniter 4 Application Starter
+# Gestão de Propostas - API REST
 
-## What is CodeIgniter?
+Projeto desenvolvido com **CodeIgniter 4** para gestão de clientes e propostas, incluindo controle de status, auditoria, filtros, paginação e documentação via Swagger.
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+---
 
-This repository holds a composer-installable app starter.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+## 📂 Estrutura do Projeto
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+- `app/Controllers/Api/V1` - Controllers da API
+- `app/Models` - Models (Cliente, Proposta, Auditoria)
+- `app/Services` - Serviços (PropostaService, PropostaStatusService, AuditoriaService)
+- `app/Database/Migrations` - Migrations para criação de tabelas
+- `app/Docs` - Arquivo `openapi.yaml` para Swagger
+- `public/` - Front controller e arquivos públicos
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+---
 
-## Installation & updates
+## ⚙️ Requisitos
 
-`composer create-project codeigniter4/appstarter` then `composer update` whenever
-there is a new release of the framework.
+- PHP >= 8.0
+- XAMPP / Apache / MySQL
+- Composer
+- Extensão `intl` do PHP habilitada
 
-When updating, check the release notes to see if there are any changes you might need to apply
-to your `app` folder. The affected files can be copied or merged from
-`vendor/codeigniter4/framework/app`.
+---
+📖 Documentação Swagger
 
-## Setup
+A documentação completa da API está disponível em:
 
-Copy `env` to `.env` and tailor for your app, specifically the baseURL
-and any database settings.
+http://localhost/gestao-propostas/public/index.php/docs
 
-## Important Change with index.php
+---
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+## 🏁 Instalação
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+1. Clone o projeto:
 
-**Please** read the user guide for a better explanation of how CI4 works!
+```bash
+git clone <seu-repositorio> gestao-propostas
+cd gestao-propostas
 
-## Repository Management
+Instale dependências via Composer:
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+composer install
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+Configure o ambiente:
 
-## Server Requirements
+copy env .env
 
-PHP version 8.2 or higher is required, with the following extensions installed:
+Edite o .env para ajustar a conexão com o banco de dados:
 
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
+database.default.hostname = localhost
+database.default.database = gestao_proposta
+database.default.username = root
+database.default.password = 
+database.default.DBDriver = MySQLi
+🗄️ Criar banco de dados e migrations
 
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - The end of life date for PHP 8.1 was December 31, 2025.
-> - If you are still using below PHP 8.2, you should upgrade immediately.
-> - The end of life date for PHP 8.2 will be December 31, 2026.
+Crie o banco de dados MySQL:
 
-Additionally, make sure that the following extensions are enabled in your PHP:
+CREATE DATABASE gestao_proposta CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+Execute as migrations:
+
+php spark migrate
+
+(Opcional) Adicione seeds iniciais, se houver:
+
+php spark db:seed <NomeDoSeeder>
+🚀 Rodando o projeto
+
+No terminal, execute o servidor interno do CodeIgniter:
+
+php spark serve
+
+Acesse a API:
+
+http://localhost:8080/api/v1
+
+Caso esteja usando XAMPP com Apache, acesse:
+
+http://localhost/gestao-propostas/public
+📄 Endpoints da API
+Clientes
+Método	Endpoint	Descrição
+POST	/api/v1/clientes	Criar cliente
+GET	/api/v1/clientes/{id}	Buscar cliente
+PATCH	/api/v1/clientes/{id}	Atualizar cliente
+DELETE	/api/v1/clientes/{id}	Remover cliente (soft delete)
+Propostas
+Método	Endpoint	Descrição
+POST	/api/v1/propostas	Criar proposta
+PATCH	/api/v1/propostas/{id}	Atualizar proposta
+POST	/api/v1/propostas/{id}/submit	Submeter proposta
+POST	/api/v1/propostas/{id}/approve	Aprovar proposta
+POST	/api/v1/propostas/{id}/reject	Rejeitar proposta
+POST	/api/v1/propostas/{id}/cancel	Cancelar proposta
+GET	/api/v1/propostas/{id}	Buscar proposta
+GET	/api/v1/propostas	Listar propostas com filtros e paginação
+GET	/api/v1/propostas/{id}/auditoria	Histórico de auditoria
+🔍 Filtros e Paginação em GET /api/v1/propostas
+
+?status=SUBMITTED - Filtrar por status
+
+?date_from=2026-02-01&date_to=2026-02-22 - Filtrar por período
+
+?sort=created_at&order=desc - Ordenação (asc ou desc)
+
+?page=1&per_page=10 - Paginação (máximo 100 itens por página)
+
+Exemplo:
+
+GET /api/v1/propostas?status=SUBMITTED&date_from=2026-02-01&date_to=2026-02-22&sort=valor_mensal&order=desc&page=1&per_page=20
+💾 Exemplos de requisições cURL
+Criar cliente
+curl -X POST http://localhost:8080/api/v1/clientes \
+-H "Content-Type: application/json" \
+-d '{
+  "nome": "João Silva",
+  "email": "joao@email.com"
+}'
+Criar proposta
+curl -X POST http://localhost:8080/api/v1/propostas \
+-H "Content-Type: application/json" \
+-H "X-Actor: user:1" \
+-d '{
+  "cliente_id": 1,
+  "produto": "Produto A",
+  "valor_mensal": 250.00,
+  "origem": "APP"
+}'
+Aprovar proposta
+curl -X POST http://localhost:8080/api/v1/propostas/1/approve \
+-H "X-Actor: user:1"
+Buscar propostas paginadas com filtros
+curl -X GET "http://localhost:8080/api/v1/propostas?status=SUBMITTED&sort=created_at&order=desc&page=1&per_page=10"
+📖 Documentação Swagger
+
+A documentação completa da API está disponível em:
+
+http://localhost/gestao-propostas/public/index.php/docs

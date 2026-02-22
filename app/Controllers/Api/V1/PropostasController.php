@@ -22,27 +22,76 @@ class PropostasController extends ResourceController
     }
 
 
-    public function index()
+public function index()
 {
-    $page = (int) ($this->request->getGet('page') ?? 1);
-    $perPage = (int) ($this->request->getGet('per_page') ?? 10);
-
-    // Limite máximo para evitar abuso
-    $perPage = min($perPage, 100);
-
     $model = new \App\Models\PropostaModel();
 
-    $data = $model->paginate($perPage, 'default', $page);
+    // ======================
+    // PAGINAÇÃO
+    // ======================
+    $page    = (int) ($this->request->getGet('page') ?? 1);
+    $perPage = (int) ($this->request->getGet('per_page') ?? 10);
+    $perPage = min($perPage, 100); // limite anti-abuso
 
-    return $this->respond([
-        'data' => $data,
-        'meta' => [
-            'currentPage' => $model->pager->getCurrentPage(),
-            'perPage'     => $perPage,
-            'total'       => $model->pager->getTotal(),
-            'totalPages'  => $model->pager->getPageCount(),
-        ]
-    ]);
+    // ======================
+    // FILTRO POR STATUS
+    // ======================
+    $status = $this->request->getGet('status');
+
+    if ($status) {
+        $model->where('status', strtoupper($status));
+    }
+
+    // ======================
+    // FILTRO POR PERÍODO
+    // ======================
+    $dateFrom = $this->request->getGet('date_from');
+    $dateTo   = $this->request->getGet('date_to');
+
+    if ($dateFrom) {
+        $model->where('created_at >=', $dateFrom . ' 00:00:00');
+    }
+
+    if ($dateTo) {
+        $model->where('created_at <=', $dateTo . ' 23:59:59');
+    }
+
+    // ======================
+    // ORDENAÇÃO SEGURA
+    // ======================
+    $allowedSortFields = ['id', 'created_at', 'valor_mensal', 'status'];
+    $sort  = $this->request->getGet('sort') ?? 'created_at';
+    $order = strtolower($this->request->getGet('order') ?? 'desc');
+
+    if (!in_array($sort, $allowedSortFields)) {
+        $sort = 'created_at';
+    }
+
+    if (!in_array($order, ['asc', 'desc'])) {
+        $order = 'desc';
+    }
+
+    $model->orderBy($sort, $order);
+
+    // ======================
+    // EXECUÇÃO
+    // ======================
+$data = $model->paginate($perPage, 'default', $page);
+
+$totalPages = $model->pager->getPageCount();
+$currentPage = $model->pager->getCurrentPage();
+
+return $this->respond([
+    'data' => $data,
+    'meta' => [
+        'currentPage' => $currentPage,
+        'perPage'     => $perPage,
+        'total'       => $model->pager->getTotal(),
+        'totalPages'  => $totalPages,
+        'hasNextPage' => $currentPage < $totalPages,
+        'hasPrevPage' => $currentPage > 1,
+    ]
+]);
 }
     /**
      * POST /propostas

@@ -1,0 +1,17 @@
+openapi: 3.0.0
+info:
+  title: API Gestão de Propostas
+  version: 1.0.0
+paths:
+  /api/v1/clientes:
+    get:
+      summary: Lista clientes
+      responses:
+        '200':
+          description: OK
+  /api/v1/propostas:
+    get:
+      summary: Lista propostas
+      responses:
+        '200':
+          description: OK

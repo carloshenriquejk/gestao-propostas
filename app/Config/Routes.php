@@ -7,7 +7,8 @@ use CodeIgniter\Router\RouteCollection;
  */
 
 $routes->get('/', 'Home::index');
-
+$routes->get('docs', 'DocsController::index');
+$routes->get('docs/openapi.yaml', 'DocsController::yaml');
 $routes->group('api/v1', function($routes) {
 
     // CLIENTES
