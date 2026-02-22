@@ -58,7 +58,7 @@ public function create(array $data, string $idempotencyKey, string $actor): arra
     /**
      * Atualização com optimistic lock
      */
-    public function atualizar(int $id, array $dados, int $versao, string $actor): array
+    public function update(int $id, array $dados, int $versao, string $actor): array
     {
         $proposta = $this->model->find($id);
 

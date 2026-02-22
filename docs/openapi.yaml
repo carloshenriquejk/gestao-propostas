@@ -9,27 +9,82 @@ servers:
 
 paths:
 
+  # =========================
+  # CLIENTES
+  # =========================
   /api/v1/clientes:
+    get:
+      summary: Listar todos os clientes
+      responses:
+        200:
+          description: Lista de clientes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cliente'
     post:
-      summary: Criar cliente
+      summary: Criar um cliente
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              required: [nome, email, documento]
-              properties:
-                nome:
-                  type: string
-                email:
-                  type: string
-                documento:
-                  type: string
+              $ref: '#/components/schemas/ClienteInput'
       responses:
         201:
-          description: Cliente criado
+          description: Cliente criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cliente'
 
+  /api/v1/clientes/{id}:
+    get:
+      summary: Obter cliente pelo ID
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+      responses:
+        200:
+          description: Cliente encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cliente'
+        404:
+          description: Cliente não encontrado
+    patch:
+      summary: Atualizar cliente
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClienteInput'
+      responses:
+        200:
+          description: Cliente atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cliente'
+        404:
+          description: Cliente não encontrado
+
+  # =========================
+  # PROPOSTAS
+  # =========================
   /api/v1/propostas:
     get:
       summary: Listar propostas com paginação e filtros
@@ -60,6 +115,7 @@ paths:
           name: sort
           schema:
             type: string
+            enum: [id, created_at, valor_mensal, status]
         - in: query
           name: order
           schema:
@@ -68,9 +124,32 @@ paths:
       responses:
         200:
           description: Lista paginada de propostas
-
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Proposta'
+                  meta:
+                    type: object
+                    properties:
+                      currentPage:
+                        type: integer
+                      perPage:
+                        type: integer
+                      total:
+                        type: integer
+                      totalPages:
+                        type: integer
+                      hasNextPage:
+                        type: boolean
+                      hasPrevPage:
+                        type: boolean
     post:
-      summary: Criar proposta
+      summary: Criar uma proposta
       parameters:
         - in: header
           name: X-Actor
@@ -82,9 +161,61 @@ paths:
           required: false
           schema:
             type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PropostaInput'
       responses:
         201:
           description: Proposta criada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Proposta'
+
+  /api/v1/propostas/{id}:
+    get:
+      summary: Obter proposta pelo ID
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+      responses:
+        200:
+          description: Proposta encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Proposta'
+        404:
+          description: Proposta não encontrada
+    patch:
+      summary: Atualizar proposta
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PropostaInput'
+      responses:
+        200:
+          description: Proposta atualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Proposta'
+        404:
+          description: Proposta não encontrada
 
   /api/v1/propostas/{id}/submit:
     post:
@@ -92,9 +223,14 @@ paths:
       parameters:
         - in: path
           name: id
-          required: true
           schema:
             type: integer
+          required: true
+        - in: header
+          name: X-Actor
+          required: false
+          schema:
+            type: string
       responses:
         200:
           description: Status alterado para SUBMITTED
@@ -105,12 +241,53 @@ paths:
       parameters:
         - in: path
           name: id
-          required: true
           schema:
             type: integer
+          required: true
+        - in: header
+          name: X-Actor
+          required: false
+          schema:
+            type: string
       responses:
         200:
           description: Status alterado para APPROVED
+
+  /api/v1/propostas/{id}/reject:
+    post:
+      summary: Rejeitar proposta
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+        - in: header
+          name: X-Actor
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: Status alterado para REJECTED
+
+  /api/v1/propostas/{id}/cancel:
+    post:
+      summary: Cancelar proposta
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+        - in: header
+          name: X-Actor
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: Status alterado para CANCELLED
 
   /api/v1/propostas/{id}/auditoria:
     get:
@@ -118,9 +295,97 @@ paths:
       parameters:
         - in: path
           name: id
-          required: true
           schema:
             type: integer
+          required: true
       responses:
         200:
           description: Lista de eventos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Auditoria'
+
+components:
+  schemas:
+    Cliente:
+      type: object
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+        email:
+          type: string
+        documento:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    ClienteInput:
+      type: object
+      required:
+        - nome
+        - email
+        - documento
+      properties:
+        nome:
+          type: string
+        email:
+          type: string
+        documento:
+          type: string
+    Proposta:
+      type: object
+      properties:
+        id:
+          type: integer
+        cliente_id:
+          type: integer
+        valor_mensal:
+          type: number
+          format: float
+        status:
+          type: string
+        versao:
+          type: integer
+        idempotency_key:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    PropostaInput:
+      type: object
+      required:
+        - cliente_id
+        - valor_mensal
+      properties:
+        cliente_id:
+          type: integer
+        valor_mensal:
+          type: number
+          format: float
+    Auditoria:
+      type: object
+      properties:
+        id:
+          type: integer
+        proposta_id:
+          type: integer
+        actor:
+          type: string
+        evento:
+          type: string
+        payload:
+          type: object
+        created_at:
+          type: string
+          format: date-time

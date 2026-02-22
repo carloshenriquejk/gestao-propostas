@@ -1,0 +1,38 @@
+-- SQLite version of your `propostas` table
+
+PRAGMA foreign_keys = OFF;
+BEGIN TRANSACTION;
+
+-- Tabela clientes (precisa existir antes de propostas)
+CREATE TABLE IF NOT EXISTS clientes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    email TEXT NOT NULL,
+    documento TEXT NOT NULL
+);
+
+-- Tabela propostas
+CREATE TABLE IF NOT EXISTS propostas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cliente_id INTEGER NOT NULL,
+    produto TEXT NOT NULL,
+    valor_mensal REAL NOT NULL,
+    status TEXT NOT NULL DEFAULT 'DRAFT',
+    origem TEXT NOT NULL,
+    versao INTEGER NOT NULL DEFAULT 1,
+    idempotency_key TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now')),
+    deleted_at TEXT,
+    FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- Dados iniciais
+INSERT INTO clientes (nome, email, documento) VALUES
+('Cliente Teste', 'teste@cliente.com', '12345678900');
+
+INSERT INTO propostas (cliente_id, produto, valor_mensal, status, origem, versao) VALUES
+(1, '', 100.00, 'DRAFT', '', 1);
+
+COMMIT;
+PRAGMA foreign_keys = ON;

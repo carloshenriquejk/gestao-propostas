@@ -22,76 +22,43 @@ class PropostasController extends ResourceController
     }
 
 
-public function index()
+public function index() // GET /api/v1/propostas
 {
     $model = new \App\Models\PropostaModel();
-
-    // ======================
-    // PAGINAÇÃO
-    // ======================
-    $page    = (int) ($this->request->getGet('page') ?? 1);
-    $perPage = (int) ($this->request->getGet('per_page') ?? 10);
-    $perPage = min($perPage, 100); // limite anti-abuso
-
-    // ======================
-    // FILTRO POR STATUS
-    // ======================
+    
+    $page = (int) ($this->request->getGet('page') ?? 1);
+    $perPage = min((int) ($this->request->getGet('per_page') ?? 10), 100);
     $status = $this->request->getGet('status');
-
-    if ($status) {
-        $model->where('status', strtoupper($status));
-    }
-
-    // ======================
-    // FILTRO POR PERÍODO
-    // ======================
     $dateFrom = $this->request->getGet('date_from');
-    $dateTo   = $this->request->getGet('date_to');
-
-    if ($dateFrom) {
-        $model->where('created_at >=', $dateFrom . ' 00:00:00');
-    }
-
-    if ($dateTo) {
-        $model->where('created_at <=', $dateTo . ' 23:59:59');
-    }
-
-    // ======================
-    // ORDENAÇÃO SEGURA
-    // ======================
-    $allowedSortFields = ['id', 'created_at', 'valor_mensal', 'status'];
-    $sort  = $this->request->getGet('sort') ?? 'created_at';
+    $dateTo = $this->request->getGet('date_to');
+    $sort = $this->request->getGet('sort') ?? 'created_at';
     $order = strtolower($this->request->getGet('order') ?? 'desc');
 
-    if (!in_array($sort, $allowedSortFields)) {
-        $sort = 'created_at';
-    }
+    if ($status) $model->where('status', strtoupper($status));
+    if ($dateFrom) $model->where('created_at >=', $dateFrom . ' 00:00:00');
+    if ($dateTo) $model->where('created_at <=', $dateTo . ' 23:59:59');
 
-    if (!in_array($order, ['asc', 'desc'])) {
-        $order = 'desc';
-    }
+    $allowedSort = ['id','created_at','valor_mensal','status'];
+    if (!in_array($sort, $allowedSort)) $sort = 'created_at';
+    if (!in_array($order,['asc','desc'])) $order = 'desc';
 
     $model->orderBy($sort, $order);
 
-    // ======================
-    // EXECUÇÃO
-    // ======================
-$data = $model->paginate($perPage, 'default', $page);
+    $data = $model->paginate($perPage, 'default', $page);
+    $totalPages = $model->pager->getPageCount();
+    $currentPage = $model->pager->getCurrentPage();
 
-$totalPages = $model->pager->getPageCount();
-$currentPage = $model->pager->getCurrentPage();
-
-return $this->respond([
-    'data' => $data,
-    'meta' => [
-        'currentPage' => $currentPage,
-        'perPage'     => $perPage,
-        'total'       => $model->pager->getTotal(),
-        'totalPages'  => $totalPages,
-        'hasNextPage' => $currentPage < $totalPages,
-        'hasPrevPage' => $currentPage > 1,
-    ]
-]);
+    return $this->respond([
+        'data' => $data,
+        'meta' => [
+            'currentPage' => $currentPage,
+            'perPage' => $perPage,
+            'total' => $model->pager->getTotal(),
+            'totalPages' => $totalPages,
+            'hasNextPage' => $currentPage < $totalPages,
+            'hasPrevPage' => $currentPage > 1
+        ]
+    ]);
 }
     /**
      * POST /propostas
@@ -138,10 +105,11 @@ public function create()
                 return $this->failValidationErrors('Versão é obrigatória para atualização.');
             }
 
-            $result = $this->propostaService->update(
-                propostaId: (int) $id,
-                data: $data,
-                versao: (int) $data['versao']
+                $result = $this->propostaService->update(
+                (int) $id,    
+                $data,          
+                (int) $data['versao'], 
+                $actor ?? 'system'     
             );
 
             return $this->respond($result);
